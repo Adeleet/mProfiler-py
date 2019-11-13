@@ -25,3 +25,4 @@ Python time profiler with automatic parsing of .py files
     - Display relevant lines/blocks of code (e.g. >5% )
     - Transform into function/method with `threshold_percentage` argument to specify above which to display code lines/blocks.
   - **[NOT STARTED]** Transform into proper Python package (`requirements.txt.`, directory structure, etc.) and publish on **PyPI**
+  - **[NOT STARTED]** Extract general structure from `Python` package (classes, methods, tests, etc.) to make it easier to write variants for other languages. (`mProfiler-js`, `mProfiler-java`, `mProfiler-cpp`, `mProfiler-csharp`, etc.) 
