@@ -108,11 +108,11 @@ regex_auto_stop = re.compile("auto_stop\s{0,1}=\s{0,1}True")
 regex_name = re.compile("name\s{0,1}=\s{0,1}")
 
 with open(file=__file__, mode="r", encoding="utf8") as file:
-    script = file.readlines()
+    SCRIPT = file.readlines()
 
 bp_start_indices = [i for i, x in enumerate(
-    script) if "start_breakpoint(" in x]
-bp_end_indices = [i for i, x in enumerate(script) if "end_breakpoint(" in x]
+    SCRIPT) if "start_breakpoint(" in x]
+bp_end_indices = [i for i, x in enumerate(SCRIPT) if "end_breakpoint(" in x]
 
 
 def _strip_quotes_(string):
@@ -144,15 +144,54 @@ def parse_line_args(line):
     return args
 
 
+def parse_profiler_name(neglect_before_line=175):
+    """
+    Returns profiler name, and index of __init__ and end calls
+
+    Args:
+        neglect_before_line (int, optional) : neglect lines before this number
+    """
+    init_index = [i for i, x in enumerate(
+        SCRIPT) if "mProfiler()" in x and i >= neglect_before_line-1][0]
+    name = SCRIPT[init_index].split("=")[0].strip()
+    end_index = [i for i, x in enumerate(
+        SCRIPT) if f"{name}.end()" in x][0]
+
+    return (name, init_index+1, end_index+1)
+
+
+profiler_name, profiler_start_index, profiler_end_index = parse_profiler_name()
 breakpoint_code = {}
 for i, line_num in enumerate(bp_start_indices):
-    line = script[line_num]
-    if "self" in line:
+    line = SCRIPT[line_num]
+    if line_num < 168 or "self" in line:
         continue
     args = parse_line_args(line)
     name, auto_stop = args["name"], args["auto_stop"]
     if auto_stop:
-        next_line_num = bp_start_indices[i+1]
-        breakpoint_code.append(script[line_num:next_line_num])
+        if i+1 < len(bp_start_indices):
+            next_line_num = bp_start_indices[i+1]
+        else:
+            next_line_num = profiler_end_index
+        breakpoint_code[name] = SCRIPT[line_num+1:next_line_num-1]
     else:
         pass
+
+for name, code in breakpoint_code.items():
+    code = "".join(code)
+    print(f"{name}\n\n{code}" + "\n"*5)
+
+# profiler = mProfiler()
+# profiler.start_breakpoint("Test1")
+# start code here for Test1!
+
+    # sdfksjflsjfdljsf
+
+# end code here for Test1!
+# profiler.start_breakpoint("Test2")
+# start code here for Test2!
+
+    # sdfksjflsjfdljsf
+
+# end code here for Test2!
+# profiler.end()
